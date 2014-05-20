@@ -1,6 +1,5 @@
 package org.me.rain_2d.level;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -17,7 +16,7 @@ import org.w3c.dom.NodeList;
 public class Level
 {
 
-	protected int width, height;
+	private int width, height;
 	protected ArrayList<Layer> layers = new ArrayList<Layer>();
 	protected ArrayList<MapNpc> npcs = new ArrayList<MapNpc>();
 
@@ -25,6 +24,8 @@ public class Level
 	{
 		this.width = width;
 		this.height = height;
+		if (width < Game.width >> 5) width = Game.width >> 5;
+		if (height < Game.height >> 5) height = Game.height >> 5;
 		generateLevel();
 	}
 
@@ -63,8 +64,8 @@ public class Level
 
 					Element eElement = (Element) nNode;
 
-					width = Integer.parseInt(eElement.getAttribute("width"));
-					height = Integer.parseInt(eElement.getAttribute("height"));
+					setWidth(Integer.parseInt(eElement.getAttribute("width")));
+					setHeight(Integer.parseInt(eElement.getAttribute("height")));
 
 				}
 
@@ -104,8 +105,11 @@ public class Level
 					nNode = layers.item(temp);
 					if (nNode.getNodeType() == Node.ELEMENT_NODE)
 					{
+						int width, height;
 						Element el = (Element) nNode;
-						Layer l = new Layer(Integer.parseInt(el.getAttribute("width")), Integer.parseInt(el.getAttribute("height")));
+						width = Integer.parseInt(el.getAttribute("width"));
+						height = Integer.parseInt(el.getAttribute("height"));
+						Layer l = new Layer(getWidth(), getHeight());
 
 						NodeList nodeListData = nNode.getChildNodes();
 						Node data = null;
@@ -116,7 +120,7 @@ public class Level
 						}
 						NodeList nodeListTiles = data.getChildNodes();
 						int tCounter = 0;
-						int tileArr[] = new int[l.width * l.height];
+						int tileArr[] = new int[width * height];
 						for (int temp2 = 0; temp2 < nodeListTiles.getLength(); temp2++)
 						{
 							Node nTile = nodeListTiles.item(temp2);
@@ -250,10 +254,10 @@ public class Level
 
 	}
 
-	public void render(int xScroll, int yScroll, Screen screen, int renderLayerBegin, int renderLayerEnd)
+	public void render(Screen screen, int renderLayerBegin, int renderLayerEnd)
 	{
 		// All coordinates are using tile precision.
-		screen.setOffset(xScroll, yScroll);
+		// screen.setOffset(xScroll, yScroll);
 
 		// Render the ground later and the mask layer
 		for (int i = renderLayerBegin; i <= renderLayerEnd; i++)
@@ -275,6 +279,27 @@ public class Level
 	public int getHeight()
 	{
 		return height;
+	}
+
+	public void setWidth(int width)
+	{
+		if (width < Game.width >> 5){
+			this.width = Game.width >> 5 + 1;
+		}else
+		{
+			this.width = width;
+		}
+						
+	}
+
+	public void setHeight(int height)
+	{
+		if (height < Game.height >> 5){
+			this.height = Game.height >> 5 + 1;
+		}else
+		{
+			this.height = height;
+		}
 	}
 
 	public Layer getLayer(int index)

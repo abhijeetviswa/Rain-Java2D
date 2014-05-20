@@ -5,10 +5,20 @@ import java.awt.event.MouseMotionListener;
 
 import javax.swing.event.MouseInputListener;
 
+import org.me.rain_2d.entity.mob.Player;
+import org.me.rain_2d.graphics.Screen;
+
 public class Mouse implements MouseMotionListener, MouseInputListener
 {
 	int x = 0, y = 0;
 	int tileX = 0, tileY = 0;
+	public boolean right;
+	private Screen screen;
+
+	public Mouse(Screen screen)
+	{
+		this.screen = screen;
+	}
 
 	public int getMouseX()
 	{
@@ -22,12 +32,12 @@ public class Mouse implements MouseMotionListener, MouseInputListener
 
 	public int getTileX()
 	{
-		return (x >> 5);
+		return screen.getTileView().x + (x >> 5);
 	}
 
 	public int getTileY()
 	{
-		return (y >> 5);
+		return screen.getTileView().y + (y >> 5);
 	}
 
 	public void mouseMoved(MouseEvent e)
@@ -36,13 +46,21 @@ public class Mouse implements MouseMotionListener, MouseInputListener
 		y = e.getY();
 	}
 
+	public void update(Player p)
+	{
+		if (right) p.setMouseRightDown(true);
+	}
+
 	public void mouseClicked(MouseEvent e)
 	{
 	}
 
 	public void mousePressed(MouseEvent e)
 	{
-
+		if (e.getButton() == MouseEvent.BUTTON3)
+		{
+			right = true;
+		}
 	}
 
 	public void mouseReleased(MouseEvent e)

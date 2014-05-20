@@ -16,8 +16,8 @@ public class RandomLevel extends Level
 	@Override
 	protected void generateLevel()
 	{
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
+		for (int y = 0; y < getHeight(); y++) {
+			for (int x = 0; x < getWidth(); x++) {
 				//tiles[x + y * width] = 0;
 			}
 		}

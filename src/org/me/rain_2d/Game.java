@@ -1,6 +1,5 @@
 package org.me.rain_2d;
 
-import java.awt.AlphaComposite;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -20,13 +19,12 @@ import org.me.rain_2d.graphics.textures.TextureCacher;
 import org.me.rain_2d.input.Keyboard;
 import org.me.rain_2d.input.Mouse;
 import org.me.rain_2d.level.Level;
-import org.me.rain_2d.level.MapNpc;
 
 public class Game extends Canvas implements Runnable
 {
 	private static final long serialVersionUID = 1L;
 	public static int width = 800;
-	public static int height = width / 4 * 3;
+	public static int height = 600;
 	public static int scale = 1;
 
 	private static Game theGame;
@@ -61,18 +59,21 @@ public class Game extends Canvas implements Runnable
 		frame = new JFrame();
 		screen = new Screen(width, height);
 		key = new Keyboard();
-		mouse = new Mouse();
+		mouse = new Mouse(screen);
 
 		textureCacher = new TextureCacher().cache();
 
 		level = new Level("example");
-		//level.addMapNpc(new MapNpc(0,0, textureCacher.getCharacterTexture("player"), level));
-		player = new Player(key, textureCacher.getCharacterTexture("player"), level);
+		// level.addMapNpc(new MapNpc(0,0,
+		// textureCacher.getCharacterTexture("player"), level));
+		player = new Player(key, mouse, textureCacher.getCharacterTexture("player"), level);
 
 		setPreferredSize(size);
 		addKeyListener(key);
 		addMouseListener(mouse);
 		addMouseMotionListener(mouse);
+		
+		System.out.println("Welcome to Abhi2011's Game");
 	}
 
 	public synchronized void start()
@@ -94,36 +95,44 @@ public class Game extends Canvas implements Runnable
 		int fps = 0;
 		int updates = 0;
 		long fpsTimer = 0;
-		while (running) {
+		while (running)
+		{
 			long now = System.nanoTime();
 			long nowMillis = System.currentTimeMillis();
 			delta += (now - lastTime) / ns;
 			lastTime = now;
 			// key.left = true;
-			while (delta >= 1) {
+			while (delta >= 1)
+			{
 				update(System.currentTimeMillis());
 				updates++;
 				delta--;
 			}
 			render();
-			if (fpsTimer > nowMillis) {
+			if (fpsTimer > nowMillis)
+			{
 				fps++;
-			} else {
+			} else
+			{
 				fpsTimer = System.currentTimeMillis() + 1000;
 				// Make sure we don't show insanely high numbers for the fps
 				// when minimzed
 
-				if (frame.getState() != Frame.ICONIFIED) {
+				if (frame.getState() != Frame.ICONIFIED)
+				{
 					frame.setTitle("UPS: " + updates + " FPS: " + fps);
-				} else {
+				} else
+				{
 					frame.setTitle("UPS: " + updates + " FPS: Not Calculating");
 				}
 				fps = 0;
 				updates = 0;
 			}
-			try {
+			try
+			{
 				Thread.sleep(1);
-			} catch (InterruptedException e) {
+			} catch (InterruptedException e)
+			{
 				e.printStackTrace();
 			}
 		}
@@ -136,6 +145,7 @@ public class Game extends Canvas implements Runnable
 
 		key.update();
 		level.update(tick);
+		mouse.update(player);
 		player.update();
 	}
 
@@ -145,43 +155,50 @@ public class Game extends Canvas implements Runnable
 		if (frame.getState() == Frame.ICONIFIED) return;
 
 		BufferStrategy bs = getBufferStrategy();
-		if (bs == null) {
+		if (bs == null)
+		{
 			createBufferStrategy(3);
 			return;
 		}
 
 		screen.clear();
 		clear();
-		int xScroll = (((player.x << 5) + player.xOffset) - (screen.getWidth() / 2));
-		int yScroll = (((player.y << 5) + player.yOffset) - (screen.getHeight() / 2));
-		screen.setOffset(xScroll, yScroll);
-		level.render(xScroll, yScroll, screen, 0, 1);
+		screen.updateCamera(player.x, player.y, 0, 0, level.getWidth(), level.getHeight());
+		level.render(screen, 0, 1);
 		player.render(screen);
-		level.render(xScroll, yScroll, screen, 2,2);
+		level.render(screen, 2, 2);
 		System.arraycopy(screen.pixels, 0, pixels, 0, screen.pixels.length);
 		Graphics2D g = (Graphics2D) bs.getDrawGraphics();
+		// Clear Screen
+		g.setColor(Color.black);
+		g.fillRect(0, 0, width, height);
+		// End Clear Screen
+
 		g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
-		g.setColor(Color.red);
-		// g.drawString(String.valueOf(player.x) + ", " +
-		// String.valueOf(player.y), 100, 100);
-		g.drawString(String.valueOf(mouse.getTileX()) + ", " + String.valueOf(mouse.getTileY()), 100, 115);
+		g.setColor(Color.yellow);
+		// Draw the Cur X, cur Y
+		g.drawString("Cur x: " + mouse.getTileX() + ", y: " + mouse.getTileY(), 100, 100);
+		g.drawString("Loc x: " + player.x + " y: " + player.x, 100, 120);
 		g.dispose();
 		bs.show();
 	}
 
 	private void clear()
 	{
-		Graphics2D g = image.createGraphics();
-		g.setComposite(AlphaComposite.getInstance(AlphaComposite.CLEAR, 0.0f));
-		g.fillRect(0, 0, image.getWidth(), image.getHeight());
-		g.dispose();
+		// Graphics2D g = image.createGraphics();
+		// g.setComposite(AlphaComposite.getInstance(AlphaComposite.CLEAR,
+		// 0.0f));
+		// g.fillRect(0, 0, image.getWidth(), image.getHeight());
+		// g.dispose();
 	}
 
 	public synchronized void stop()
 	{
-		try {
+		try
+		{
 			game.join();
-		} catch (InterruptedException e) {
+		} catch (InterruptedException e)
+		{
 			e.printStackTrace();
 		}
 	}
@@ -191,7 +208,8 @@ public class Game extends Canvas implements Runnable
 		return theGame;
 	}
 
-	public static boolean runningOnJar(){
+	public static boolean runningOnJar()
+	{
 		return runningOnJar;
 	}
 

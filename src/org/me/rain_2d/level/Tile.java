@@ -26,7 +26,8 @@ public class Tile
 
 	public Sprite getSprite()
 	{
-		if (!emptyTile) {
+		if (!emptyTile)
+		{
 			return new Sprite(32, texX, texY, Game.getGame().textureCacher.getTilesetTexture(tex));
 		}
 		return null;
@@ -35,8 +36,9 @@ public class Tile
 	public void render(int x, int y, Screen screen)
 	{
 		Sprite sprite = getSprite();
-		if (sprite != null) {
-			screen.renderTile(x, y, sprite);
+		if (sprite != null)
+		{
+			screen.renderTile(screen.convertMapX(x) + screen.getXOffset(), screen.convertMapY(y) + screen.getYOffset(), sprite);
 		}
 	}
 
