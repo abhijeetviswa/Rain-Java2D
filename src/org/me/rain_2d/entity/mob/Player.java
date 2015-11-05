@@ -32,7 +32,7 @@ public class Player extends Mob
 	public void update()
 	{
 		int xa = 0, ya = 0;
-		float speed = 1.0f; // Default speed 
+		float speed = 1f; // Default speed 
 		if (keyboard.shift && this.rightMouseDown){
 			this.x = mouse.getTileX();
 			this.y = mouse.getTileY();

@@ -6,50 +6,59 @@ import org.me.rain_2d.graphics.textures.Sprite;
 
 public class Tile
 {
-	String tex;
-	int texX, texY;
-	boolean emptyTile;
-	boolean collision;
 
-	public Tile(String tex, int texX, int texY)
-	{
-		this.tex = tex;
-		this.texX = texX;
-		this.texY = texY;
-		this.emptyTile = false;
-	}
+    String tex;
+    int texX, texY;
+    boolean emptyTile;
+    boolean collision;
+    Sprite sprite;
 
-	public Tile(boolean emptyTile)
-	{
-		this.emptyTile = true;
-	}
+    public Tile(String tex, int texX, int texY)
+    {
+        this.tex = tex;
+        this.texX = texX;
+        this.texY = texY;
+        this.emptyTile = false;
+    }
 
-	public Sprite getSprite()
-	{
-		if (!emptyTile)
-		{
-			return new Sprite(32, texX, texY, Game.getGame().textureCacher.getTilesetTexture(tex));
-		}
-		return null;
-	}
+    public Tile(boolean emptyTile)
+    {
+        this.emptyTile = true;
+    }
 
-	public void render(int x, int y, Screen screen)
-	{
-		Sprite sprite = getSprite();
-		if (sprite != null)
-		{
-			screen.renderTile(screen.convertMapX(x) + screen.getXOffset(), screen.convertMapY(y) + screen.getYOffset(), sprite);
-		}
-	}
+    public Sprite getSprite()
+    {
+        if (!emptyTile)
+        {
+            if (sprite == null)
+            {
+                sprite = new Sprite(32, texX, texY, Game.getGame().textureCacher.getTilesetTexture(tex));
+                return sprite;
+            } else
+            {
+                return sprite;
+            }
+        }
+        return null;
+    }
 
-	public boolean isCollidable()
-	{
-		return collision;
-	}
+    public void render(int x, int y, Screen screen)
+    {
+        Sprite tempSprite = getSprite();
+        if (tempSprite != null)
+        {
+            screen.renderTile(screen.convertMapX(x), screen.convertMapY(y), screen.getXOffset(), screen.getYOffset(), tempSprite);
+        }
+    }
 
-	public void setCollidable(boolean val)
-	{
-		collision = val;
-	}
+    public boolean isCollidable()
+    {
+        return collision;
+    }
+
+    public void setCollidable(boolean val)
+    {
+        collision = val;
+    }
 
 }

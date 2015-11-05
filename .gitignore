@@ -13,6 +13,7 @@ tmp/
 *~.nib
 local.properties
 .classpath
+*.class
 .settings/
 .loadpath
 
@@ -28,6 +29,22 @@ local.properties
 # PDT-specific
 .buildpath
 
+# NetBeans specific #
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# Class Files #
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
 
 #################
 ## Visual Studio
@@ -213,3 +230,6 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+/nbproject/private/
+
+*.rar

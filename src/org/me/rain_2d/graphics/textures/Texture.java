@@ -1,9 +1,11 @@
 package org.me.rain_2d.graphics.textures;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
@@ -34,17 +36,22 @@ public class Texture
 
 	public void load()
 	{
-		if (this.loaded) {
-			timer = System.currentTimeMillis() + 15000;
+		if (this.loaded)
+		{
+			timer = System.currentTimeMillis() + 60000;
 		}
-		if (!isLoaded()) {
-			try {
+		if (!isLoaded())
+		{
+			try
+			{
 				// Read on based how we are running
+
 				BufferedImage in = null;
-				if (Game.runningOnJar()) {
-					System.out.println(path);
+				if (Game.runningOnJar())
+				{
 					in = ImageIO.read(getClass().getResourceAsStream("/" + path));
-				} else {
+				} else
+				{
 					in = ImageIO.read(new File(path));
 				}
 				BufferedImage image = new BufferedImage(in.getWidth(), in.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -60,11 +67,13 @@ public class Texture
 				image.getRGB(0, 0, w, h, pixels, 0, w);
 				loaded = true;
 				timer = System.currentTimeMillis() + 15000;
-			} catch (IOException e) {
+			} catch (Exception e)
+			{
 				System.err.println("Couldn't load file" + path);
 				e.printStackTrace();
 			}
 		}
+
 	}
 
 	public BufferedImage getAlphaImage(File f) throws IOException
@@ -80,13 +89,13 @@ public class Texture
 
 	public int getWidth()
 	{
-		load();
+		if (!loaded) load();
 		return SIZE_X;
 	}
 
 	public int getHeight()
 	{
-		load();
+		if (!loaded) load();
 		return SIZE_Y;
 	}
 
@@ -97,7 +106,8 @@ public class Texture
 
 	public void unLoad()
 	{
-		if (System.currentTimeMillis() > timer && loaded) {
+		if (System.currentTimeMillis() > timer && loaded)
+		{
 			pixels = new int[0];
 			System.out.println(path);
 			loaded = false;
@@ -107,11 +117,13 @@ public class Texture
 
 	public static void unLoadAll(TextureCacher texC)
 	{
-		for (Texture tex : texC.tex_tileset.values()) {
+		for (Texture tex : texC.tex_tileset.values())
+		{
 			tex.unLoad();
 		}
 
-		for (Texture tex : texC.tex_character.values()) {
+		for (Texture tex : texC.tex_character.values())
+		{
 			tex.unLoad();
 		}
 

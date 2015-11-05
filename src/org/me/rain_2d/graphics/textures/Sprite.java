@@ -21,14 +21,15 @@ public class Sprite
 		this.sheet = sheet;
 		// Load the sheet or extends it's lifetime in memory
 		this.sheet.load();
-		load();
+                this.load();
+		
 	}
 
 	public Sprite(int size, Color colour)
 	{
 		SIZE = size;
 		pixels = new int[size * size];
-		setColour(colour);
+		this.setColour(colour);
 
 	}
 
@@ -42,7 +43,12 @@ public class Sprite
 		int col = img.getRGB(0, 0);
 		Arrays.fill(pixels, col);
 	}
-
+        
+        /*public int getPixel(int x, int y)
+        {
+            return sheet.pixels[((x + this.x)) + ((y + this.y)) * sheet.getWidth()];
+        }*/
+        
 	public void load()
 	{
 		for (int y = 0; y < SIZE; y++) {
@@ -50,5 +56,8 @@ public class Sprite
 				pixels[x + y * SIZE] = sheet.pixels[((x + this.x)) + ((y + this.y)) * sheet.getWidth()];
 			}
 		}
+                //int[] temp = new int[SIZE * SIZE];
+                //System.arraycopy(sheet.pixels, this.x + this.y * sheet.getWidth(), pixels, 0, SIZE * SIZE);
+                
 	}
 }

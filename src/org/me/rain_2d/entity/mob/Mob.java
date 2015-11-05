@@ -17,7 +17,7 @@ public abstract class Mob extends Entity
 
 	protected int step = 0; // 0 = right, 1 = left
 
-	public int xOffset, yOffset;
+	public float xOffset, yOffset;
 
 	protected Level level;
 
@@ -26,18 +26,20 @@ public abstract class Mob extends Entity
 		this.sheet = sheet;
 	}
 
-	public void move(int xa, int ya){
-		this.move(xa,ya,1.0f);
+	public void move(int xa, int ya)
+	{
+		this.move(xa, ya, 1.0f);
 	}
-	
+
 	public void move(int xa, int ya, float speed)
 	{
 		if (moving)
 		{
 			if (dir == 0)
-			{
-				yOffset += 3 * speed;
-				if (yOffset >= 32)
+			{ // Down
+				yOffset -= 1 * speed;
+				// if (yOffset <= 0) return;
+				if (yOffset <= -32)
 				{
 					y++;
 					yOffset = 0;
@@ -45,9 +47,9 @@ public abstract class Mob extends Entity
 					moving = false;
 				}
 			} else if (dir == 1)
-			{
-				xOffset -= 3 * speed;
-				if (xOffset <= -32)
+			{ // Left
+				xOffset += 1 * speed;
+				if (xOffset >= 32)
 				{
 					x--;
 					yOffset = 0;
@@ -55,9 +57,9 @@ public abstract class Mob extends Entity
 					moving = false;
 				}
 			} else if (dir == 2)
-			{
-				xOffset += 3 * speed;
-				if (xOffset >= 32)
+			{ // Right
+				xOffset -= 1 * speed;
+				if (xOffset <= -32)
 				{
 					x++;
 					yOffset = 0;
@@ -65,9 +67,9 @@ public abstract class Mob extends Entity
 					moving = false;
 				}
 			} else if (dir == 3)
-			{
-				yOffset -= 3 * speed;
-				if (yOffset <= -32)
+			{ // Up
+				yOffset += 1 * speed;
+				if (yOffset >= 32)
 				{
 					y--;
 					yOffset = 0;
@@ -85,30 +87,38 @@ public abstract class Mob extends Entity
 			if (ya == -1)
 			{ // Moving down
 				if (collision(x, y + 1) || isOutOfBounds(x, y + 1)) return;
+
 				moving = true;
 				dir = 0;
-
+				yOffset = 0 * -1;
+				//yOffset = 0;
 			}
 
 			if (xa == -1)
 			{ // Left
-				if (collision(x - 1, y) || isOutOfBounds(x - 1, y)) return;
+				if (collision(x - 1, y) || isOutOfBounds(x - 1, y)) { return; }
 				moving = true;
 				dir = 1;
+				// xOffset = 32;
+				xOffset = 0;
 			}
 
 			if (xa == 1)
 			{ // Right
-				if (collision(x + 1, y) || isOutOfBounds(x + 1, y)) return;
+				if (collision(x + 1, y) || isOutOfBounds(x + 1, y)) { return; }
 				moving = true;
 				dir = 2;
+				xOffset = 0;
+				//xOffset = 0;
 			}
 
 			if (ya == 1)
 			{ // Moving Up
-				if (collision(x, y - 1) || isOutOfBounds(x, y - 1)) return;
+				if (collision(x, y - 1) || isOutOfBounds(x, y - 1)) { return; }
 				moving = true;
 				dir = 3;
+				// yOffset = 32;
+				yOffset = 0;
 			}
 		}
 	}
@@ -128,7 +138,7 @@ public abstract class Mob extends Entity
 		screen.renderMob(x, y, xOffset, yOffset, getSprite());
 		if (renderHealth)
 		{
-			screen.renderHealth(x, y, xOffset, yOffset);
+			// screen.renderHealth(x, y, xOffset, yOffset);
 		}
 	}
 
@@ -152,12 +162,9 @@ public abstract class Mob extends Entity
 	private boolean isOutOfBounds(int x, int y)
 	{
 		// Checks if we are out-of-bounds
-		if (!(x > level.getWidth() || x < 0))
+		if (!(x > level.getWidth() - 1 || x < 0))
 		{
-			if (!(y > level.getHeight() || y < 0))
-			{
-				return false;
-			}
+			if (!(y > level.getHeight() - 1 || y < 0)) { return false; }
 		}
 		return true;
 	}
@@ -170,8 +177,8 @@ public abstract class Mob extends Entity
 	protected Sprite getSprite()
 	{
 		// return new Sprite(32, anim, dir, sheet);
-		if (step == 0) return new Sprite(32, 0, dir, sheet);
-		if (step == 1) return new Sprite(32, 2, dir, sheet);
+		if (step == 0) { return new Sprite(32, 0, dir, sheet); }
+		if (step == 1) { return new Sprite(32, 2, dir, sheet); }
 		return new Sprite(32, 1, dir, sheet);
 
 	}

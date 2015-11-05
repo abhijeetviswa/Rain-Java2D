@@ -16,22 +16,17 @@ public class Layer
 
 	public Tile getTile(int x, int y)
 	{
-		if (x < 0 || y < 0 || x >= width - 1 || y >= height - 1)
-		{
-			return null;
-		}
-		if (tile[x][y] == null || tile[x][y].tex == null)
-		{
-			return new Tile(true);
-		}
+		if (x < 0 || y < 0 || x >= width  || y >= height) { return null; }
+		if (tile[x][y] == null || tile[x][y].tex == null) { return new Tile(true); }
 		return tile[x][y];
 	}
 
 	public void render(Screen screen)
 	{
-		for (int x = screen.getTileView().x; x <= screen.getTileView().width; x++)
+		long tmr = System.currentTimeMillis();
+		for (int x = screen.getTileView().x; x < screen.getTileView().width; x++)
 		{
-			for (int y = screen.getTileView().y; y <= screen.getTileView().height; y++)
+			for (int y = screen.getTileView().y; y < screen.getTileView().height; y++)
 			{
 				Tile t = getTile(x, y);
 				if (t != null)
@@ -40,5 +35,6 @@ public class Layer
 				}
 			}
 		}
+		// System.out.println(System.currentTimeMillis() - tmr);
 	}
 }

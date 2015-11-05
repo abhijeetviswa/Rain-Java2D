@@ -30,7 +30,7 @@ public class MapNpc extends NPC
 		if (moveTimer % 13 == 0) {
 			int i;
 			Random random = new Random();
-			i = random.nextInt(3);
+			i = random.nextInt(4);
 			if (i == 0) {
 				move(-1, 0);
 			} else if (i == 1) {

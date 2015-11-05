@@ -5,7 +5,6 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
-
 import org.me.rain_2d.graphics.textures.Sprite;
 
 public class Screen
@@ -28,57 +27,66 @@ public class Screen
 
 	}
 
-	public void renderTile(int xp, int yp, Sprite sprite)
+	public void renderTile(float xp, float yp, float xOffset, float yOffset, Sprite sprite)
 	{
-		// xp -= camera.getXOffset();
-		// yp -= camera.getYOffset();
-		for (int y = 0; y < 32; y++)
+		xOffset = 0;
+		yOffset = 0;
+		for (int y = (int) 0; y < 32; y++)
 		{
-			int ya = y + yp;
-			for (int x = 0; x < 32; x++)
+			float ya = yp + y;
+			for (int x = (int) 0; x < 32; x++)
 			{
-				int xa = x + xp;
-				if (xa < -32 || xa >= width || ya < 0 || ya >= height) break;
-				if (xa < 0) xa = 0;
-				int col = sprite.pixels[x + y * 32];
-				if (col != 0) pixels[xa + ya * width] = col;
+				float xa = x + xp;
+				if ((xa + xOffset) < 0 || (xa + xOffset) >= width || (ya + yOffset) < 0 || (ya + yOffset) >= height)
+					continue;
+				int col = sprite.pixels[x + y * sprite.SIZE];
+				if (col != 0)
+				{
+					pixels[(int) ((xa + xOffset) + (ya + yOffset) * width)] = col;
+				}
 			}
 		}
 	}
 
-	public void renderMob(int x, int y, int xOffset, int yOffset, Sprite sprite)
+	public void renderMob(int x, int y, float xOffset, float yOffset, Sprite sprite)
 	{
-		// x <<= 5;
-		// y <<= 5;
-		// x = ((x + xOffset) + camera.getXOffset());
-		// y = ((y + yOffset) + camera.getYOffset());
-		x = convertMapX(x) + xOffset;
-		y = convertMapY(y) + yOffset;
+		//if (yOffset > 0 || yOffset < 0) return;
+		x = (int) (convertMapX(x));
+		y = (int) (convertMapY(y));
+		// xOffset = 0;
+		// yOffset = 0;
+		xOffset *= -1;
+		yOffset *= -1;
 		for (int yCounter = 0; yCounter < 32; yCounter++)
 		{
-			int ya = yCounter + y;
+			int ya = yCounter + y + (int) yOffset;
 			for (int xCounter = 0; xCounter < 32; xCounter++)
 			{
-				int xa = xCounter + x;
+				int xa = xCounter + x + (int) xOffset;
 				if (xa < -32 || xa >= width || ya < 0 || ya >= height) break;
-				if (xa < 0) xa = 0;
+
+				if (xa < 0)
+				{
+					xa = 0;
+				}
 				int col = sprite.pixels[xCounter + yCounter * 32];
-				if (col != 0) pixels[xa + ya * width] = col;
+				if (col != 0)
+				{
+					pixels[xa + ya * width] = col;
+				}
 			}
 		}
-
 	}
 
 	public void renderPlayer(int x, int y, int xOffset, int yOffset, Sprite sprite)
-	{
-	}
+	{}
 
 	public void renderHealth(int x, int y, int xOffset, int yOffset)
 	{
 		x <<= 5;
 		y <<= 5;
-		x = ((x + xOffset) - camera.getXOffset());
-		y = ((y + yOffset) - camera.getYOffset());
+		x = (int) (((x + xOffset) - camera.getXOffset()));
+		y = (int) (((y + yOffset) - camera.getYOffset()));
 		x += 2;
 		y += 36;
 
@@ -101,15 +109,21 @@ public class Screen
 			for (int xCounter = 0; xCounter < barWidth; xCounter++)
 			{
 				int xa = xCounter + x;
-				if (xa < -32 || xa >= width || ya < 0 || ya >= height) break;
-				if (xa < 0) xa = 0;
+				if (xa < -32 || xa >= width || ya < 0 || ya >= height)
+				{
+					break;
+				}
+				if (xa < 0)
+				{
+					xa = 0;
+				}
 				pixels[xa + ya * width] = bg[xCounter + yCounter * barWidth];
 			}
 		}
 
 	}
 
-	public void updateCamera(int playerX, int playerY, int xOffset, int yOffset, int mapMaxX, int mapMaxY)
+	public void updateCamera(int playerX, int playerY, float xOffset, float yOffset, int mapMaxX, int mapMaxY)
 	{
 		camera.updateCamera(playerX, playerY, xOffset, yOffset, mapMaxX, mapMaxY);
 	}
@@ -119,12 +133,12 @@ public class Screen
 		return camera.getTileView();
 	}
 
-	public int getXOffset()
+	public float getXOffset()
 	{
 		return camera.getXOffset();
 	}
 
-	public int getYOffset()
+	public float getYOffset()
 	{
 		return camera.getYOffset();
 	}

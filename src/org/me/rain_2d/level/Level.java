@@ -24,8 +24,8 @@ public class Level
 	{
 		this.width = width;
 		this.height = height;
-		if (width < Game.width >> 5) width = Game.width >> 5;
-		if (height < Game.height >> 5) height = Game.height >> 5;
+		if (width < Game.winWidth >> 5) width = Game.winWidth >> 5;
+		if (height < Game.winHeight >> 5) height = Game.winHeight >> 5;
 		generateLevel();
 	}
 
@@ -53,143 +53,103 @@ public class Level
 			doc.getDocumentElement().normalize();
 
 			// Get Map Main Data
-			NodeList nList = doc.getElementsByTagName("map");
-			for (int temp = 0; temp < nList.getLength(); temp++)
+			Element mapEl = (Element) doc.getElementsByTagName("map").item(0);
+
+			setWidth(Integer.parseInt(mapEl.getAttribute("width")));
+			setHeight(Integer.parseInt(mapEl.getAttribute("height")));
+
+			// Get Tilesets used in Map
+			NodeList tilesetListNode = doc.getElementsByTagName("tileset");
+			for (int temp = 0; temp < tilesetListNode.getLength(); temp++)
 			{
+				Element tilesetEl = (Element) tilesetListNode.item(temp);
+				Tileset ts = new Tileset();
 
-				Node nNode = nList.item(temp);
-
-				if (nNode.getNodeType() == Node.ELEMENT_NODE)
+				ts.fName = tilesetEl.getAttribute("name");
+				ts.firstGid = Integer.parseInt(tilesetEl.getAttribute("firstgid"));
+				if (temp != tilesetListNode.getLength() - 1)
 				{
-
-					Element eElement = (Element) nNode;
-
-					setWidth(Integer.parseInt(eElement.getAttribute("width")));
-					setHeight(Integer.parseInt(eElement.getAttribute("height")));
-
+					ts.lastGid = Integer.parseInt(((Element) tilesetListNode.item(temp + 1)).getAttribute("firstgid"))
+							- 1;
+				} else
+				{
+					int pix = Game.getGame().textureCacher.getTilesetTexture(ts.fName).getWidth()
+							* Game.getGame().textureCacher.getTilesetTexture(ts.fName).getWidth();
+					int tpix = 32 * 32;
+					int val = pix / tpix;
+					ts.lastGid = val;
 				}
 
-				// Get Tilesets used in Map
-				NodeList tileset = doc.getElementsByTagName("tileset");
-				for (temp = 0; temp < tileset.getLength(); temp++)
+				tilesets.add(ts);
+			}
+
+			// Get Layer Data
+			NodeList layers = doc.getElementsByTagName("layer");
+			for (int temp = 0; temp < layers.getLength(); temp++)
+			{
+				Element layerEl = (Element) layers.item(temp);
+				int width = Integer.parseInt(layerEl.getAttribute("width"));
+				int height = Integer.parseInt(layerEl.getAttribute("height"));
+				Layer l = new Layer(this.width, this.height);
+				Node dataNode = layerEl.getElementsByTagName("data").item(0);
+				NodeList tiles = ((Element) dataNode).getElementsByTagName("tile");
+
+				int tCounter = 0;
+				int tileArr[] = new int[width * height];
+				for (int temp2 = 0; temp2 < tiles.getLength(); temp2++)
 				{
-					nNode = tileset.item(temp);
-
-					if (nNode.getNodeType() == Node.ELEMENT_NODE)
-					{
-						Element el = (Element) nNode;
-
-						Tileset ts = new Tileset();
-
-						ts.fName = el.getAttribute("name");
-						ts.firstGid = Integer.parseInt(el.getAttribute("firstgid"));
-						if (temp != tileset.getLength() - 1)
-						{
-							ts.lastGid = Integer.parseInt(((Element) tileset.item(temp + 1)).getAttribute("firstgid")) - 1;
-						} else
-						{
-							int pix = Game.getGame().textureCacher.getTilesetTexture(ts.fName).getWidth() * Game.getGame().textureCacher.getTilesetTexture(ts.fName).getWidth();
-							int tpix = 32 * 32;
-							int val = pix / tpix;
-							ts.lastGid = val;
-						}
-
-						tilesets.add(ts);
-					}
+					Element tileEl = (Element) tiles.item(temp2);
+					tileArr[tCounter] = Integer.parseInt(tileEl.getAttribute("gid"));
+					tCounter++;
 				}
+				parseTilesetData(tileArr, l, tilesets);
+				this.layers.add(l);
+			}
 
-				// Get Layer Data
-				NodeList layers = doc.getElementsByTagName("layer");
-				for (temp = 0; temp <= layers.getLength() - 1; temp++)
+			// Parse Objects
+			NodeList objectGroups = doc.getElementsByTagName("objectgroup");
+			for (int temp = 0; temp < objectGroups.getLength(); temp++)
+			{
+				Element objectGroupEl = (Element) objectGroups.item(temp);
+				String groupName = null;
+				groupName = objectGroupEl.getAttribute("name");
+				if (groupName == null) continue;
+
+				// Get the object data
+				NodeList objects = objectGroupEl.getElementsByTagName("object");
+				for (int temp2 = 0; temp2 < objects.getLength(); temp2++)
 				{
-					nNode = layers.item(temp);
-					if (nNode.getNodeType() == Node.ELEMENT_NODE)
-					{
-						int width, height;
-						Element el = (Element) nNode;
-						width = Integer.parseInt(el.getAttribute("width"));
-						height = Integer.parseInt(el.getAttribute("height"));
-						Layer l = new Layer(getWidth(), getHeight());
+					Element objectEl = (Element) objects.item(temp2);
 
-						NodeList nodeListData = nNode.getChildNodes();
-						Node data = null;
-						for (int temp2 = 0; temp2 < nodeListData.getLength() - 1; temp2++)
+					float x, y;
+					int width, height;
+					switch (groupName.toLowerCase())
+					{
+					case "collision":
+						x = Float.parseFloat(objectEl.getAttribute("x"));
+						y = Float.parseFloat(objectEl.getAttribute("y"));
+						width = Integer.parseInt(objectEl.getAttribute("width"));
+						height = Integer.parseInt(objectEl.getAttribute("height"));
+						// Align everything properly and send the data
+						// x1 = (int) (Math.ceil())) - 1);
+						float xF = x + width;
+						float yF = y + height;
+						int x1 = (int) Math.rint(x / 32.0);
+						int y1 = (int) Math.rint(y / 32.0);
+						int x2 = (int) (Math.rint(xF / 32.0)) - 1;
+						int y2 = (int) (Math.rint(yF / 32.0)) - 1;
+						for (int ycounter = y1; ycounter <= y2; ycounter++)
 						{
-							data = nodeListData.item(temp2);
-							if (data.getNodeType() == Node.ELEMENT_NODE) break;
-						}
-						NodeList nodeListTiles = data.getChildNodes();
-						int tCounter = 0;
-						int tileArr[] = new int[width * height];
-						for (int temp2 = 0; temp2 < nodeListTiles.getLength(); temp2++)
-						{
-							Node nTile = nodeListTiles.item(temp2);
-							if (nTile.getNodeType() == Node.ELEMENT_NODE)
+							for (int xcounter = x1; xcounter <= x2; xcounter++)
 							{
-								Element eTile = (Element) nTile;
-								if (Integer.parseInt(eTile.getAttribute("gid")) > 0)
-								{
-									tileArr[tCounter] = Integer.parseInt(eTile.getAttribute("gid"));
-								}
-								tCounter++;
-							}
-						}
-						parseTilesetData(tileArr, l, tilesets);
-						this.layers.add(l);
-					}
-				}
-
-				// Parse Objects
-				NodeList objectgroup = doc.getElementsByTagName("objectgroup");
-				for (temp = 0; temp < objectgroup.getLength(); temp++)
-				{
-					nNode = objectgroup.item(temp);
-					String groupName = null;
-					if (nNode.getNodeType() == Node.ELEMENT_NODE)
-					{
-						Element el = (Element) nNode;
-						groupName = el.getAttribute("name");
-					}
-					if (groupName == null) continue;
-
-					// Get the object data
-					NodeList nodeListObject = nNode.getChildNodes();
-					Node object = null;
-					for (int temp2 = 0; temp2 < nodeListObject.getLength(); temp2++)
-					{
-						object = nodeListObject.item(temp2);
-						if (object.getNodeType() == Node.ELEMENT_NODE)
-						{
-							float x, y;
-							int width, height;
-							switch (groupName.toLowerCase()) {
-							case "collision":
-								Element el = (Element) object;
-								x = Float.parseFloat(el.getAttribute("x"));
-								y = Float.parseFloat(el.getAttribute("y"));
-								width = Integer.parseInt(el.getAttribute("width"));
-								height = Integer.parseInt(el.getAttribute("height"));
-								// Align everything properly and send the data
-								// x1 = (int) (Math.ceil())) - 1);
-								float xF = x + width;
-								float yF = y + height;
-								int x1 = (int) Math.rint(x / 32.0);
-								int y1 = (int) Math.rint(y / 32.0);
-								int x2 = (int) (Math.rint(xF / 32.0)) - 1;
-								int y2 = (int) (Math.rint(yF / 32.0)) - 1;
-								for (int ycounter = y1; ycounter <= y2; ycounter++)
-								{
-									for (int xcounter = x1; xcounter <= x2; xcounter++)
-									{
-										Layer l = this.layers.get(0);
-										l.getTile(xcounter, ycounter).setCollidable(true);
-									}
-								}
+								Layer l = this.layers.get(0);
+								l.getTile(xcounter, ycounter).setCollidable(true);
 							}
 						}
 					}
 				}
 			}
+
 		} catch (Exception e)
 		{
 			System.err.println("Error while loading level: " + name);
@@ -206,24 +166,32 @@ public class Level
 
 	public void parseTilesetData(int[] tileArr, Layer l, ArrayList<Tileset> sets)
 	{
-		for (int x = 0; x <= (l.width - 1); ++x)
+		boolean shouldBreak = false;
+
+		for (int y = 0; y < (l.height); y++)
 		{
-			for (int y = 0; y <= (l.height - 1); ++y)
+			for (int x = 0; x < (l.width); x++)
 			{
+				shouldBreak = false;
 				for (Tileset t : sets)
 				{
+					if (shouldBreak) break;
 					if (tileArr[x + y * l.width] >= t.firstGid && tileArr[x + y * l.width] <= t.lastGid)
 					{
 						Texture tex = Game.getGame().textureCacher.getTilesetTexture(t.fName);
 						for (int sx = 0; sx < (tex.getWidth() >> 5); sx++)
 						{
+							if (shouldBreak) break;
 							for (int sy = 0; sy < (tex.getHeight() >> 5); sy++)
 							{
+								if (shouldBreak) break;
 								if (t.firstGid != 1)
 								{
 									if (sx + sy * (tex.getWidth() >> 5) == (tileArr[(x + y * l.width)]) - t.firstGid)
 									{
 										l.tile[x][y] = new Tile(t.fName, sx, sy);
+										shouldBreak = true;
+										break;
 									}
 								} else
 								{
@@ -238,6 +206,12 @@ public class Level
 				}
 			}
 		}
+	}
+
+	public int calculateHeuristic(int x0, int y0, int x1, int y1)
+	{
+		int distance = Math.abs(x1 - x0) + Math.abs(y1 - y0);
+		return distance;
 	}
 
 	public void update(long tick)
@@ -262,6 +236,10 @@ public class Level
 		// Render the ground later and the mask layer
 		for (int i = renderLayerBegin; i <= renderLayerEnd; i++)
 		{
+			if (i == 2)
+			{
+				// System.out.println("test");
+			}
 			this.layers.get(i).render(screen);
 		}
 
@@ -283,20 +261,22 @@ public class Level
 
 	public void setWidth(int width)
 	{
-		if (width < Game.width >> 5){
-			this.width = Game.width >> 5 + 1;
-		}else
+		if (width < Game.winWidth >> 5)
+		{
+			this.width = Game.winWidth >> 5 + 1;
+		} else
 		{
 			this.width = width;
 		}
-						
+
 	}
 
 	public void setHeight(int height)
 	{
-		if (height < Game.height >> 5){
-			this.height = Game.height >> 5 + 1;
-		}else
+		if (height < Game.winHeight >> 5)
+		{
+			this.height = Game.winHeight >> 5 + 1;
+		} else
 		{
 			this.height = height;
 		}
