@@ -69,7 +69,7 @@ public abstract class Mob extends Entity
 			} else if (dir == 3)
 			{ // Up
 				yOffset += 1 * speed;
-				if (yOffset >= 32)
+				if (yOffset >= 0)
 				{
 					y--;
 					yOffset = 0;
@@ -117,8 +117,7 @@ public abstract class Mob extends Entity
 				if (collision(x, y - 1) || isOutOfBounds(x, y - 1)) { return; }
 				moving = true;
 				dir = 3;
-				// yOffset = 32;
-				yOffset = 0;
+				yOffset = -32;
 			}
 		}
 	}
@@ -135,7 +134,7 @@ public abstract class Mob extends Entity
 
 	public void render(Screen screen, boolean renderHealth)
 	{
-		screen.renderMob(x, y, xOffset, yOffset, getSprite());
+		screen.renderMob(x, y, 0, 0, getSprite());
 		if (renderHealth)
 		{
 			// screen.renderHealth(x, y, xOffset, yOffset);

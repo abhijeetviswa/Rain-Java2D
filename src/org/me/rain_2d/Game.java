@@ -26,7 +26,7 @@ public class Game extends Canvas implements Runnable, ConsoleListener
 
 	private static final long serialVersionUID = 1L;
 	public static int winWidth = 800;
-	public static int winHeight = 600;
+	public static int winHeight = 608;
 	public static int scale = 1;
 
 	private static Game theGame;
@@ -71,8 +71,6 @@ public class Game extends Canvas implements Runnable, ConsoleListener
 		textureCacher = new TextureCacher().cache();
 
 		level = new Level("example");
-		// level.addMapNpc(new MapNpc(0, 0,
-		// textureCacher.getCharacterTexture("player"), level));
 		player = new Player(key, mouse, textureCacher.getCharacterTexture("player"), level);
 
 		setPreferredSize(size);
@@ -127,9 +125,6 @@ public class Game extends Canvas implements Runnable, ConsoleListener
 			}
 			lastRender = System.currentTimeMillis();
 			render();
-			// System.out.println(System.currentTimeMillis() - lastRender);
-			// System.out.println(nowMillis + ", " + 1000 + lastRender);
-			// lastRender = System.currentTimeMillis();
 
 			if (fpsTimer > nowMillis)
 			{
@@ -137,9 +132,6 @@ public class Game extends Canvas implements Runnable, ConsoleListener
 			} else
 			{
 				fpsTimer = System.currentTimeMillis() + 1000;
-				// Make sure we don't show insanely high numbers for the fps
-				// when minimzed
-
 				if (frame.getState() != Frame.ICONIFIED)
 				{
 					frame.setTitle("UPS: " + updates + " FPS: " + fps);
@@ -151,10 +143,6 @@ public class Game extends Canvas implements Runnable, ConsoleListener
 				updates = 0;
 			}
 			Thread.yield();
-			/*
-			 * try { Thread.sleep(1); } catch (InterruptedException e) {
-			 * e.printStackTrace(); }
-			 */
 		}
 		stop();
 	}
@@ -178,7 +166,7 @@ public class Game extends Canvas implements Runnable, ConsoleListener
 		System.arraycopy(screen.pixels, 0, pixels, 0, screen.pixels.length);
 		// clear();
 		screen.updateCamera(player.x, player.y, player.xOffset, player.yOffset, level.getWidth(), level.getHeight());
-		level.render(screen, 0, 1);
+		level.render(screen);
 		player.render(screen);
 		// level.render(screen, 2, 2);
 		System.arraycopy(screen.pixels, 0, pixels, 0, screen.pixels.length);
@@ -186,23 +174,21 @@ public class Game extends Canvas implements Runnable, ConsoleListener
 		// Clear Screen
 		g.setColor(Color.black);
 		g.fillRect(0, 0, winWidth, winHeight);
-		//g.setColor(new Color(0,0,0,0));
-		//g.fillRect(0, 0, winWidth, winHeight);
+		// g.setColor(new Color(0,0,0,0));
+		// g.fillRect(0, 0, winWidth, winHeight);
 		// End Clear Screen
 
 		g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
-		// for (int x = 0; x <= (winWidth >> 5); x++)
-		// {
-		// for (int y = 0; y <= (winHeight >> 5); y++)
-		// {
-		// //g.drawLine(x << 5, y << 5, (x << 5), (y << 5) + getHeight());
-		// //g.drawLine(x << 5, y << 5, (x << 5) + getWidth(), (y << 5));
-		// //g.drawString((x + screen.getTileView().x) + "", (x << 5) + 5, (y <<
-		// 5) + 13);
-		// //g.drawString((y + screen.getTileView().y) + "", (x << 5) + 5, (y <<
-		// 5) + 25);
-		// }
-		// }
+//		 for (int x = 0; x <= (winWidth >> 5); x++)
+//		 {
+//		 for (int y = 0; y <= (winHeight >> 5); y++)
+//		 {
+//		 g.drawLine(x << 5, y << 5, (x << 5), (y << 5) + getHeight());
+//		 g.drawLine(x << 5, y << 5, (x << 5) + getWidth(), (y << 5));
+//		 g.drawString((x + screen.getTileView().x) + "", (x << 5) + 5, (y << 5) + 13);
+//		 g.drawString((y + screen.getTileView().y) + "", (x << 5) + 5, (y << 5) + 25);
+//		 }
+//		 }
 
 		g.setColor(Color.yellow);
 		// Draw the Cur X, cur Y
@@ -211,8 +197,7 @@ public class Game extends Canvas implements Runnable, ConsoleListener
 		g.drawString("Offsets x: " + player.xOffset + ", y: " + player.yOffset, 100, 140);
 
 		g.drawString("TileView Left: " + screen.getTileView().x + " Top: " + screen.getTileView().y, 600, 100);
-		g.drawString("TileView Right: " + screen.getTileView().width + " Bottom: " + screen.getTileView().height, 600,
-				120);
+		g.drawString("TileView Right: " + screen.getTileView().width + " Bottom: " + screen.getTileView().height, 600, 120);
 		g.dispose();
 		bs.show();
 	}

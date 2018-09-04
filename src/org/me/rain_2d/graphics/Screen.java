@@ -23,22 +23,22 @@ public class Screen
 		this.width = width;
 		this.height = height;
 		pixels = new int[width * height];
-		camera = new Camera(width / 2, height / 2, width, height);
+		camera = new Camera(width, height, width / 32, height / 32);
 
 	}
 
 	public void renderTile(float xp, float yp, float xOffset, float yOffset, Sprite sprite)
 	{
-		xOffset = 0;
-		yOffset = 0;
+		// xOffset = 0;
+		// yOffset = 0;
 		for (int y = (int) 0; y < 32; y++)
 		{
 			float ya = yp + y;
 			for (int x = (int) 0; x < 32; x++)
 			{
 				float xa = x + xp;
-				if ((xa + xOffset) < 0 || (xa + xOffset) >= width || (ya + yOffset) < 0 || (ya + yOffset) >= height)
-					continue;
+				if ((xa + xOffset) < 0 || (xa + xOffset) >= width || (ya + yOffset) < 0 || (ya + yOffset) >= height) continue;
+				//if ((y + yOffset) >= sprite.SIZE) continue;
 				int col = sprite.pixels[x + y * sprite.SIZE];
 				if (col != 0)
 				{
@@ -50,9 +50,9 @@ public class Screen
 
 	public void renderMob(int x, int y, float xOffset, float yOffset, Sprite sprite)
 	{
-		//if (yOffset > 0 || yOffset < 0) return;
-		x = (int) (convertMapX(x));
-		y = (int) (convertMapY(y));
+		// if (yOffset > 0 || yOffset < 0) return;
+		x = (int) (convertFromMapX(x));
+		y = (int) (convertFromMapY(y));
 		// xOffset = 0;
 		// yOffset = 0;
 		xOffset *= -1;
@@ -85,8 +85,8 @@ public class Screen
 	{
 		x <<= 5;
 		y <<= 5;
-		x = (int) (((x + xOffset) - camera.getXOffset()));
-		y = (int) (((y + yOffset) - camera.getYOffset()));
+		// x = (int) (((x + xOffset) - camera.getXOffset()));
+		// y = (int) (((y + yOffset) - camera.getYOffset()));
 		x += 2;
 		y += 36;
 
@@ -125,22 +125,8 @@ public class Screen
 
 	public void updateCamera(int playerX, int playerY, float xOffset, float yOffset, int mapMaxX, int mapMaxY)
 	{
-		camera.updateCamera(playerX, playerY, xOffset, yOffset, mapMaxX, mapMaxY);
-	}
-
-	public Rectangle getTileView()
-	{
-		return camera.getTileView();
-	}
-
-	public float getXOffset()
-	{
-		return camera.getXOffset();
-	}
-
-	public float getYOffset()
-	{
-		return camera.getYOffset();
+		// camera.updateCamera(playerX, playerY, xOffset, yOffset, mapMaxX, mapMaxY);
+		camera.centerAround(playerX, playerY, xOffset, yOffset, mapMaxX, mapMaxY);
 	}
 
 	public void clear()
@@ -159,13 +145,34 @@ public class Screen
 		return width;
 	}
 
-	public int convertMapX(int x)
+	public Rectangle getTileView()
 	{
-		return camera.getMapX(x);
+		return camera.getTileView();
 	}
 
-	public int convertMapY(int y)
+	/**
+	 * Return the pixel coordinates (on-screen) for the given map tile coordinate
+	 */
+	public int convertFromMapX(int x)
 	{
-		return camera.getMapY(y);
+		return (x - camera.getTileView().x) * 32;
+	}
+
+	/**
+	 * Return the pixel coordinates (on-screen) for the given map tile coordinate
+	 */
+	public int convertFromMapY(int y)
+	{
+		return (y - camera.getTileView().y) * 32;
+	}
+
+	public float getXOffset()
+	{
+		return camera.getXOffset();
+	}
+
+	public float getYOffset()
+	{
+		return camera.getYOffset();
 	}
 }

@@ -6,255 +6,89 @@ import org.me.rain_2d.Game;
 public class Camera
 {
 
-	float x = 0, y = 0;
+	private final int SCREEN_WIDTH;
+	private final int SCREEN_HEIGHT;
+	private final int SCREEN_TILE_WIDTH;
+	private final int SCREEN_TILE_HEIGHT;
 
-	private Rectangle TileView = new Rectangle();
-	// private Rectangle2D.Float Camera = new Rectangle2D.Float();
+	Rectangle view = new Rectangle();
+	float xOffset, yOffset;
 
-	int width = 0, height = 0;
-
-	/**
-	 * The first tile to be rendered on the screen horizontally
-	 */
-	private final int START_VALUE_X;
-	/**
-	 * The first tile to be rendered on the screen vertically
-	 */
-	private final int START_VALUE_Y;
-
-	/**
-	 * The last tile to be rendered on the screen horizontally
-	 */
-	private final int END_VALUE_X;
-	/**
-	 * The last tile to be rendered on the screen vertically
-	 */
-	private final int END_VALUE_Y;
-
-	/**
-	 * The number of tiles rendered horizontally
-	 */
-	private final int MAP_MAX_X;
-	/**
-	 * The number of tiles rendered vertically
-	 */
-	private final int MAP_MAX_Y;
-
-	public Camera(int x, int y, int width, int height)
+	public Camera(int width, int height, int screenTileWidth, int screenTileHeight)
 	{
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
-
-		MAP_MAX_X = width / 32;
-		MAP_MAX_Y = height / 32;
-
-		START_VALUE_X = (MAP_MAX_X + 1) / 2;
-		START_VALUE_Y = (MAP_MAX_Y + 1) / 2;
-
-		END_VALUE_X = (MAP_MAX_X + 1) + 1;
-		END_VALUE_Y = (MAP_MAX_Y + 1) + 1;
+		this.SCREEN_WIDTH = width;
+		this.SCREEN_HEIGHT = height;
+		this.SCREEN_TILE_WIDTH = screenTileWidth;
+		this.SCREEN_TILE_HEIGHT = screenTileHeight;
 	}
 
-	public void updateCamera(int x, int y, float xOffset, float yOffset, int mapMaxX, int mapMaxY)
+	public void centerAround(int x, int y, float xOffset, float yOffset, int mapWidth, int mapHeight)
 	{
-		int tx, ty, tw, th, txo, tyo;
-		// mapMaxX--;
-		// mapMaxY--;
-		txo = (int) xOffset;
-		tyo = (int) yOffset;
 
-		tx = x - (((Game.winWidth / 32) + 1) / 2);
-		ty = y - (((Game.winHeight / 32) + 1) / 2);
-
-		if (tx < 0)
+		// Center the camera around x and y
+		int left = x - (SCREEN_TILE_WIDTH / 2);
+		int right = x + (SCREEN_TILE_WIDTH / 2) + 1;
+		if (left < 0)
 		{
-			txo = 0;
-			if (tx == -1)
-			{
-				if (xOffset > 0)
-				{
-					txo = (int) xOffset;
-				}
-			}
-			tx = 0;
+			right += -1 * left;
+			left = 0;
+		} else if (right > mapWidth) // The map will have a minimum size = to the width of window... so hopefully both won't happen
+		{
+			left -= (right - mapWidth);
+			right = mapWidth;
 		}
 
-		if (ty < 0)
+		int top = y - (SCREEN_TILE_HEIGHT / 2);
+		int bottom = y + (SCREEN_TILE_HEIGHT / 2) + 1;
+		if (top < 0)
 		{
-			tyo = 0;
-			if (ty == -1)
+			bottom += -1 * top;
+			top = 0;
+		} else
+		{
+			if (yOffset > 0) // is the center moving up? if so make the map move as well
 			{
-				if (yOffset > 0)
-				{
-					tyo = (int) yOffset;
-				}
+				top--;
 			}
-			ty = 0;
 		}
-		if (!(mapMaxX == (Game.winWidth / 32)))
+		if (bottom > mapHeight) // The map will have a minimum size = to the width of window... so hopefully both won't happen
 		{
-			if (xOffset > 0) // Going to left or right ??
+			top -= (bottom - mapHeight);
+			bottom = mapHeight;
+			if (yOffset < 0) // we're moving down
 			{
-				tw = tx + ((Game.winWidth / 32) + 1) + 1;
-			} else
-			{
-				tw = tx + ((Game.winWidth / 32) + 1);
+				//yOffset = 0;
 			}
 		} else
 		{
-			tw = tx + ((Game.winWidth / 32) + 1);
-		}
-
-		if (!(mapMaxY == (Game.winHeight / 32)))
-		{
-			if (yOffset > 0)
+			if (yOffset < 0) // is the center moving down?
 			{
-				th = ty + ((Game.winHeight / 32) + 1) + 1;
-			} else
-			{
-				th = ty + ((Game.winHeight / 32) + 1);
-			}
-		} else
-		{
-			th = ty + ((Game.winHeight / 32) + 1);
-		}
-
-		if (tw > mapMaxX)
-		{
-			tw = mapMaxX;
-			txo = 0;
-			if (mapMaxX == (Game.winWidth / 32))
-			{
-				// We can view entire map in the screen
-				tx = 0;
-			} else
-			{
-				tx = tw - (Game.winWidth / 32);
+				if (!(bottom == mapHeight)) // if the bottom is the map then map musn't scroll
+					bottom++;
+				// if (bottom > mapHeight) bottom--;
 			}
 		}
 
-		if (ty > mapMaxY)
-		{
-			ty = mapMaxY;
-			tyo = 0;
-			if (mapMaxY == (Game.winHeight / 32))
-			{
-				tw = 0;
-			} else
-			{
-				ty = ty - (Game.winWidth / 32);
-			}
-		}
-
-		// if (tw - 1 >= mapMaxX)
-		// {
-		// //if (txo < 0) txo = 0; // If we are moving towards the right
-		// tw = mapMaxX;
-		//
-		// if (mapMaxX == (Game.winWidth / 32))
-		// {
-		// if (txo != 0)
-		// {
-		// tx = tw - (Game.winWidth / 32);
-		// } else
-		// {
-		// tx = tw - (Game.winWidth / 32) - 1;
-		// }
-		// } else
-		// {
-		// tx = tw - (Game.winWidth / 32);
-		// }
-		// }//else {if (txo < 0) txo = 0;}
-
-		// if (th - 1 > mapMaxY)
-		// {
-		// tyo = 32;
-		// th = mapMaxY;
-		//
-		// if (mapMaxY == (Game.winHeight / 32))
-		// {
-		// if (tyo != 0)
-		// {
-		// ty = th - (Game.winHeight / 32);
-		// } else
-		// {
-		// ty = th - (Game.winHeight / 32) - 1;
-		// }
-		// } else
-		// {
-		// ty = th - (Game.winHeight / 32);
-		// }
-		// }
-
-		TileView.x = tx;
-		TileView.y = ty;
-		TileView.width = tw;
-		TileView.height = th;
-		this.x = txo;
-		this.y = tyo;
-		// this.x = 0;
-		// this.y = 0;
+		view.x = left;
+		view.width = right;
+		view.y = top;
+		view.height = bottom;
+		this.xOffset = xOffset;
+		this.yOffset = yOffset;
 	}
-	/*
-	 * public void updateCamera(int playerX, int playerY, float xOffset, float
-	 * yOffset, int mapMaxX, int mapMaxY) {
-	 * 
-	 * if (true == true) { TileView.x = playerX; TileView.y = playerY;
-	 * TileView.width = (800 / 32) + 1; TileView.height = (800 / 32) + 1; x =
-	 * xOffset; y = yOffset; return; }
-	 * 
-	 * int tempOffX = (int) xOffset + 32; int tempOffY = (int) yOffset + 32;
-	 * 
-	 * int startX = playerX - START_VALUE_X; // The x coord to start rendering
-	 * // from int startY = playerY - START_VALUE_Y; // The y coord to start
-	 * rendering // from
-	 * 
-	 * // Make sure we don't render outside the maps if (startX < 0) { tempOffX
-	 * = 0; if (startX == -1) { if (xOffset > 0) { tempOffX = (int) xOffset; } }
-	 * startX = 0; } if (startY < 0) { tempOffY = 0; if (startY == -1) { if
-	 * (yOffset > 0) { tempOffY = (int) yOffset; } } startY = 0; }
-	 * 
-	 * int endX = playerX + END_VALUE_X; int endY = playerY + END_VALUE_Y;
-	 * 
-	 * if (endX > mapMaxX) { endX = mapMaxX; if (endX ==
-	 * Game.getGame().getLevel().getWidth() + 1) { if (xOffset < 0) { tempOffX =
-	 * (int) xOffset + 32; } } startX = endX - MAP_MAX_X - 1; }
-	 * 
-	 * if (endY > mapMaxY) { endY = mapMaxY; if (endY ==
-	 * Game.getGame().getLevel().getHeight() + 1) { if (yOffset < 0) { tempOffY
-	 * = (int) yOffset + 32; } } startY = endY - MAP_MAX_Y - 1; }
-	 * 
-	 * TileView.x = startX; TileView.y = startY; TileView.width = endX;
-	 * TileView.height = endY;
-	 * 
-	 * this.x = tempOffX; this.y = tempOffY; }
-	 */
 
 	public Rectangle getTileView()
 	{
-		return TileView;
+		return view;
 	}
 
 	public float getXOffset()
 	{
-		return x;
+		return xOffset;
 	}
 
 	public float getYOffset()
 	{
-		return y;
+		return yOffset;
 	}
-
-	public int getMapX(int x)
-	{
-		return ((x - this.TileView.x) * 32) + (int) getXOffset();
-	}
-
-	public int getMapY(int y)
-	{
-		return ((y - this.TileView.y) * 32) + (int) getYOffset();
-	}
-
 }

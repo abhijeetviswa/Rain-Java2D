@@ -37,7 +37,7 @@ public class Player extends Mob
 			this.x = mouse.getTileX();
 			this.y = mouse.getTileY();
 		}else if(keyboard.shift){
-			speed = 2.0f;
+			speed = 4.0f;
 		}
 		if (!moving)
 		{

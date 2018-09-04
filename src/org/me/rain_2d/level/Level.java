@@ -1,17 +1,17 @@
 package org.me.rain_2d.level;
 
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.ListIterator;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.me.rain_2d.Game;
 import org.me.rain_2d.graphics.Screen;
 import org.me.rain_2d.graphics.textures.Texture;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import static java.lang.Math.toIntExact;
 
 public class Level
 {
@@ -39,123 +39,110 @@ public class Level
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private void loadLevel(String name)
 	{
-		ArrayList<Tileset> tilesets = new ArrayList<Tileset>();
+		ArrayList<Tileset> tilesetList = new ArrayList<Tileset>(0);
+		JSONParser parser = new JSONParser();
 		try
 		{
+			JSONObject obj = (JSONObject) parser.parse(new InputStreamReader(getClass().getResourceAsStream("/levels/" + name + ".json")));
 
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			this.setWidth(toIntExact((long) obj.get("width")));
+			this.setHeight(toIntExact((long) obj.get("height")));
 
-			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			Document doc = dBuilder.parse(getClass().getResourceAsStream("/levels/" + name + ".tmx"));
-
-			doc.getDocumentElement().normalize();
-
-			// Get Map Main Data
-			Element mapEl = (Element) doc.getElementsByTagName("map").item(0);
-
-			setWidth(Integer.parseInt(mapEl.getAttribute("width")));
-			setHeight(Integer.parseInt(mapEl.getAttribute("height")));
-
-			// Get Tilesets used in Map
-			NodeList tilesetListNode = doc.getElementsByTagName("tileset");
-			for (int temp = 0; temp < tilesetListNode.getLength(); temp++)
+			// Loading the tilesets
+			JSONArray tilesets = (JSONArray) obj.get("tilesets");
+			Iterator<JSONObject> tileSetIterator = tilesets.iterator();
+			while (tileSetIterator.hasNext())
 			{
-				Element tilesetEl = (Element) tilesetListNode.item(temp);
+				JSONObject tileset = tileSetIterator.next();
 				Tileset ts = new Tileset();
-
-				ts.fName = tilesetEl.getAttribute("name");
-				ts.firstGid = Integer.parseInt(tilesetEl.getAttribute("firstgid"));
-				if (temp != tilesetListNode.getLength() - 1)
-				{
-					ts.lastGid = Integer.parseInt(((Element) tilesetListNode.item(temp + 1)).getAttribute("firstgid"))
-							- 1;
-				} else
-				{
-					int pix = Game.getGame().textureCacher.getTilesetTexture(ts.fName).getWidth()
-							* Game.getGame().textureCacher.getTilesetTexture(ts.fName).getWidth();
-					int tpix = 32 * 32;
-					int val = pix / tpix;
-					ts.lastGid = val;
-				}
-
-				tilesets.add(ts);
+				ts.fName = (String) tileset.get("name");
+				Texture tex =  Game.getGame().textureCacher.getTilesetTexture(ts.fName);
+				ts.firstGid = toIntExact((long) tileset.get("firstgid"));
+				ts.lastGid = ts.firstGid + (tex.getHeight() * tex.getWidth() / (32 * 32));				
+				tilesetList.add(ts);
 			}
 
-			// Get Layer Data
-			NodeList layers = doc.getElementsByTagName("layer");
-			for (int temp = 0; temp < layers.getLength(); temp++)
+			// Loading the layers and objects
+			JSONArray layers = (JSONArray) obj.get("layers");
+			ListIterator<JSONObject> listIterator = layers.listIterator();
+			while (listIterator.hasNext())
 			{
-				Element layerEl = (Element) layers.item(temp);
-				int width = Integer.parseInt(layerEl.getAttribute("width"));
-				int height = Integer.parseInt(layerEl.getAttribute("height"));
-				Layer l = new Layer(this.width, this.height);
-				Node dataNode = layerEl.getElementsByTagName("data").item(0);
-				NodeList tiles = ((Element) dataNode).getElementsByTagName("tile");
-
-				int tCounter = 0;
-				int tileArr[] = new int[width * height];
-				for (int temp2 = 0; temp2 < tiles.getLength(); temp2++)
+				JSONObject layer = (JSONObject) listIterator.next();
+				String type = ((String) layer.get("type")).trim().toLowerCase();
+				int width, height;
+				if (type.compareTo("tilelayer") == 0)
 				{
-					Element tileEl = (Element) tiles.item(temp2);
-					tileArr[tCounter] = Integer.parseInt(tileEl.getAttribute("gid"));
-					tCounter++;
-				}
-				parseTilesetData(tileArr, l, tilesets);
-				this.layers.add(l);
-			}
+					width = toIntExact((long) layer.get("width"));
+					height = toIntExact((long) layer.get("height"));
+					Layer l = new Layer(width, height);
 
-			// Parse Objects
-			NodeList objectGroups = doc.getElementsByTagName("objectgroup");
-			for (int temp = 0; temp < objectGroups.getLength(); temp++)
-			{
-				Element objectGroupEl = (Element) objectGroups.item(temp);
-				String groupName = null;
-				groupName = objectGroupEl.getAttribute("name");
-				if (groupName == null) continue;
-
-				// Get the object data
-				NodeList objects = objectGroupEl.getElementsByTagName("object");
-				for (int temp2 = 0; temp2 < objects.getLength(); temp2++)
-				{
-					Element objectEl = (Element) objects.item(temp2);
-
-					float x, y;
-					int width, height;
-					switch (groupName.toLowerCase())
+					int tCounter = 0;
+					int tileArr[] = new int[width * height];
+					JSONArray data = (JSONArray) layer.get("data");
+					Iterator<Long> dataIterator = data.iterator();
+					while (dataIterator.hasNext())
 					{
-					case "collision":
-						x = Float.parseFloat(objectEl.getAttribute("x"));
-						y = Float.parseFloat(objectEl.getAttribute("y"));
-						width = Integer.parseInt(objectEl.getAttribute("width"));
-						height = Integer.parseInt(objectEl.getAttribute("height"));
-						// Align everything properly and send the data
-						// x1 = (int) (Math.ceil())) - 1);
-						float xF = x + width;
-						float yF = y + height;
-						int x1 = (int) Math.rint(x / 32.0);
-						int y1 = (int) Math.rint(y / 32.0);
-						int x2 = (int) (Math.rint(xF / 32.0)) - 1;
-						int y2 = (int) (Math.rint(yF / 32.0)) - 1;
-						for (int ycounter = y1; ycounter <= y2; ycounter++)
+						tileArr[tCounter] = toIntExact(dataIterator.next());
+						tCounter++;
+					}
+
+					parseTilesetData(tileArr, l, tilesetList);
+					this.layers.add(l);
+					listIterator.remove(); // So that the object group iterator doesn't have to go through tilelayers
+				}
+			}
+
+			// Get the object groups (stuff like collisions)
+			listIterator = layers.listIterator();
+			while (listIterator.hasNext())
+			{
+				JSONObject layer = (JSONObject) listIterator.next();
+				String type = ((String) layer.get("type")).trim().toLowerCase();
+				if (type.compareTo("objectgroup") == 0)
+				{
+					String objGroupName = ((String) layer.get("name")).trim().toLowerCase();
+					if (objGroupName == null) continue;
+
+					JSONArray objects = (JSONArray) layer.get("objects");
+					Iterator<JSONObject> objectIterator = objects.iterator();
+					while (objectIterator.hasNext())
+					{
+						int width, height;
+						int x1, y1;
+						JSONObject object = (JSONObject) objectIterator.next();
+						switch (objGroupName)
 						{
-							for (int xcounter = x1; xcounter <= x2; xcounter++)
+						case "collision":
+							x1 = toIntExact((long) object.get("x")) / 32;;
+							y1 = toIntExact((long) object.get("y")) / 32;;
+							width = toIntExact((long) object.get("width")) / 32;
+							height = toIntExact((long) object.get("height")) / 32;;
+							int x2 = x1 + width;
+							int y2 = y1 + height;
+							for (int x = x1; x <= x2; x++)
 							{
-								Layer l = this.layers.get(0);
-								l.getTile(xcounter, ycounter).setCollidable(true);
+								for (int y = y1; y <= y2; y++)
+								{
+									Layer l = this.layers.get(0);
+									l.getTile(x, y).setCollidable(true);
+								}
 							}
+							break;
 						}
+
 					}
 				}
 			}
+		} catch (
 
-		} catch (Exception e)
+		Exception e)
 		{
 			System.err.println("Error while loading level: " + name);
 			e.printStackTrace();
 		}
-
 	}
 
 	public void addMapNpc(MapNpc npc)
@@ -228,18 +215,11 @@ public class Level
 
 	}
 
-	public void render(Screen screen, int renderLayerBegin, int renderLayerEnd)
-	{
-		// All coordinates are using tile precision.
-		// screen.setOffset(xScroll, yScroll);
-
+	public void render(Screen screen)
+	{		
 		// Render the ground later and the mask layer
-		for (int i = renderLayerBegin; i <= renderLayerEnd; i++)
+		for (int i = 0; i < layers.size(); i++)
 		{
-			if (i == 2)
-			{
-				// System.out.println("test");
-			}
 			this.layers.get(i).render(screen);
 		}
 

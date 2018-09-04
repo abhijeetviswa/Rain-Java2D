@@ -23,7 +23,6 @@ public class Layer
 
 	public void render(Screen screen)
 	{
-		long tmr = System.currentTimeMillis();
 		for (int x = screen.getTileView().x; x < screen.getTileView().width; x++)
 		{
 			for (int y = screen.getTileView().y; y < screen.getTileView().height; y++)
@@ -35,6 +34,5 @@ public class Layer
 				}
 			}
 		}
-		// System.out.println(System.currentTimeMillis() - tmr);
 	}
 }
